@@ -61,9 +61,9 @@ pv.Scales.DateTimeScale.prototype.nice = function() {
 };
 
 // Returns a list of rule values
-pv.Scales.DateTimeScale.prototype.ruleValues = function() {
+pv.Scales.DateTimeScale.prototype.ruleValues = function(forceSpan) {
   var min  = this._min.valueOf(), max = this._max.valueOf();
-  var span = this.span(this._min, this._max);
+  var span = (forceSpan == null) ? this.span(this._min, this._max) : forceSpan;
   var step = this.step(this._min, this._max, span);
   var list = [];
 
