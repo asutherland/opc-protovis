@@ -64,14 +64,18 @@ pv.Scales.DateTimeScale.prototype.nice = function() {
 pv.Scales.DateTimeScale.prototype.ruleValues = function(forceSpan) {
   var min  = this._min.valueOf(), max = this._max.valueOf();
   var span = (forceSpan == null) ? this.span(this._min, this._max) : forceSpan;
-  var step = this.step(this._min, this._max, span);
+  // We need to boost the step in order to avoid an infinite loop in the first
+  //  case where we round.  DST can cause a case where just one step is not
+  //  enough to push round far enough.
+  var step = Math.floor(this.step(this._min, this._max, span) * 1.5);
   var list = [];
 
   var d = this._min;
   if (span < pv.Scales.DateTimeScale.Span.MONTHS) {
     while (d.valueOf() <= max) {
       list.push(d);
-      d = new Date(d.valueOf()+step);
+      // we need to round to compensate for daylight savings time...
+      d = this.round(new Date(d.valueOf()+step), span, false);
     }
   } else if (span == pv.Scales.DateTimeScale.Span.MONTHS) {
     // TODO: Handle quarters
@@ -125,7 +129,7 @@ pv.Scales.DateTimeScale.prototype.round = function(t, span, roundUp) {
   } else if (span == Span.MILLISECONDS) {
     d = new Date(d.time + (roundUp ? 1 : -1));
   } else if (span == Span.WEEKS) {
-    bias = roundUp ? 7 - d.day : -d.day;
+    bias = roundUp ? 7 - d.getDay() : -d.getDay();
     d = new Date(t.getFullYear(), t.getMonth(), t.getDate() + bias);
   }
   return d;
