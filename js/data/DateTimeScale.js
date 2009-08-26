@@ -60,8 +60,19 @@ pv.Scales.DateTimeScale.prototype.nice = function() {
   this._max = this.round(this._max, span, true);
 };
 
-// Returns a list of rule values
-pv.Scales.DateTimeScale.prototype.ruleValues = function(forceSpan) {
+/**
+ * Calculate a list of rule values covering the time range spaced at a
+ * configurable span.
+ *
+ * @param [forceSpan] If you want to force rule-generation from a span other
+ *     than the default calculated by span, pass the value here.
+ * @param [beNice] Round the min and max values based on the span in use. If
+ *     you are passing a value for forceSpan, you may also want to pass true
+ *     for this argument.
+ *
+ * @return a list of rule values
+ */
+pv.Scales.DateTimeScale.prototype.ruleValues = function(forceSpan, beNice) {
   var min  = this._min.valueOf(), max = this._max.valueOf();
   var span = (forceSpan == null) ? this.span(this._min, this._max) : forceSpan;
   // We need to boost the step in order to avoid an infinite loop in the first
@@ -71,6 +82,10 @@ pv.Scales.DateTimeScale.prototype.ruleValues = function(forceSpan) {
   var list = [];
 
   var d = this._min;
+  if (beNice) {
+    d = this.round(d, span, false);
+    max = this.round(this._max, span, true).valueOf();
+  }
   if (span < pv.Scales.DateTimeScale.Span.MONTHS) {
     while (d.valueOf() <= max) {
       list.push(d);
@@ -114,7 +129,7 @@ pv.Scales.DateTimeScale.prototype.round = function(t, span, roundUp) {
   var Span = pv.Scales.DateTimeScale.Span;
   var d = t, bias = roundUp ? 1 : 0;
 
-  if (span > Span.YEARS) {
+  if (span >= Span.YEARS) {
     d = new Date(t.getFullYear() + bias, 0);
   } else if (span == Span.MONTHS) {
     d = new Date(t.getFullYear(), t.getMonth() + bias);
